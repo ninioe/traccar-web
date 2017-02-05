@@ -1,4 +1,2 @@
-l10n/**
-tests/**
 locale.js
-arrow.js
+simple/app.js

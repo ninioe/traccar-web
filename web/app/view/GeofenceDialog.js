@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  */
 
 Ext.define('Traccar.view.GeofenceDialog', {
-    extend: 'Traccar.view.BaseDialog',
+    extend: 'Traccar.view.BaseEditDialog',
 
     requires: [
         'Traccar.view.GeofenceDialogController'
@@ -36,6 +36,14 @@ Ext.define('Traccar.view.GeofenceDialog', {
             name: 'description',
             fieldLabel: Strings.sharedDescription
         }, {
+            xtype: 'combobox',
+            name: 'calendarId',
+            store: 'Calendars',
+            queryMode: 'local',
+            displayField: 'name',
+            valueField: 'id',
+            fieldLabel: Strings.sharedCalendar
+        }, {
             xtype: 'hiddenfield',
             name: 'area',
             allowBlank: false,
@@ -48,12 +56,21 @@ Ext.define('Traccar.view.GeofenceDialog', {
         glyph: 'xf21d@FontAwesome',
         handler: 'onAreaClick'
     }, {
+        text: Strings.sharedAttributes,
+        handler: 'showAttributesView'
+    }, {
         xtype: 'tbfill'
     }, {
-        text: Strings.sharedSave,
+        glyph: 'xf00c@FontAwesome',
+        tooltip: Strings.sharedSave,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'onSaveClick'
     }, {
-        text: Strings.sharedCancel,
+        glyph: 'xf00d@FontAwesome',
+        tooltip: Strings.sharedCancel,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'closeView'
     }]
 });

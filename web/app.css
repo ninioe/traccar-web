@@ -8,21 +8,12 @@
     background-color: rgba(255, 84, 104, 0.3);
 }
 
-.x-tree-icon {
-    display: none !important;
+.toolbar-header-style {
+    background-color: #5fa2dd !important;
 }
 
-.state-indicator {
-    position: absolute;
-    top: -999em;
-    left: -999em;
-    z-index: 0;
-}
-
-@media all and (max-device-width: 768px) {
-    .state-indicator {
-        z-index: 1;
-    }
+body.x-border-layout-ct, div.x-border-layout-ct {
+    background-color: #bbbbbb !important;
 }
 
 #attribution {

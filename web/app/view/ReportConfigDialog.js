@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
- * Copyright 2016 Andrey Kunitsyn (abyss@fox5.ru)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 Andrey Kunitsyn (andrey@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@ Ext.define('Traccar.view.ReportConfigDialog', {
     items: [{
         fieldLabel: Strings.reportDevice,
         xtype: 'tagfield',
-        width: Traccar.Style.reportTagfieldWidth,
         reference: 'deviceField',
+        maxWidth: Traccar.Style.formFieldWidth,
         store: 'Devices',
         valueField: 'id',
         displayField: 'name',
@@ -39,8 +39,8 @@ Ext.define('Traccar.view.ReportConfigDialog', {
     }, {
         fieldLabel: Strings.reportGroup,
         xtype: 'tagfield',
-        width: Traccar.Style.reportTagfieldWidth,
         reference: 'groupField',
+        maxWidth: Traccar.Style.formFieldWidth,
         store: 'Groups',
         valueField: 'id',
         displayField: 'name',
@@ -48,19 +48,36 @@ Ext.define('Traccar.view.ReportConfigDialog', {
     }, {
         fieldLabel: Strings.reportEventTypes,
         xtype: 'tagfield',
-        width: Traccar.Style.reportTagfieldWidth,
         reference: 'eventTypeField',
+        maxWidth: Traccar.Style.formFieldWidth,
         store: 'ReportEventTypes',
         hidden: true,
         valueField: 'type',
         displayField: 'name',
         queryMode: 'local'
     }, {
+        fieldLabel: Strings.reportChartType,
+        xtype: 'combobox',
+        reference: 'chartTypeField',
+        store: 'ReportChartTypes',
+        hidden: true,
+        value: 'speedConverted',
+        valueField: 'key',
+        displayField: 'name',
+        queryMode: 'local'
+    }, {
+        fieldLabel: Strings.reportShowMarkers,
+        xtype: 'checkbox',
+        reference: 'showMarkersField',
+        inputValue: true,
+        uncheckedValue: false,
+        value: false
+    }, {
         xtype: 'fieldcontainer',
-        layout: 'hbox',
+        layout: 'vbox',
+        fieldLabel: Strings.reportFrom,
         items: [{
             xtype: 'datefield',
-            fieldLabel: Strings.reportFrom,
             reference: 'fromDateField',
             startDay: Traccar.Style.weekStartDay,
             format: Traccar.Style.dateFormat,
@@ -68,15 +85,14 @@ Ext.define('Traccar.view.ReportConfigDialog', {
         }, {
             xtype: 'customTimeField',
             reference: 'fromTimeField',
-            maxWidth: Traccar.Style.reportTime,
             value: new Date(new Date().getTime() - 30 * 60 * 1000)
         }]
     }, {
         xtype: 'fieldcontainer',
-        layout: 'hbox',
+        layout: 'vbox',
+        fieldLabel: Strings.reportTo,
         items: [{
             xtype: 'datefield',
-            fieldLabel: Strings.reportTo,
             reference: 'toDateField',
             startDay: Traccar.Style.weekStartDay,
             format: Traccar.Style.dateFormat,
@@ -84,16 +100,21 @@ Ext.define('Traccar.view.ReportConfigDialog', {
         }, {
             xtype: 'customTimeField',
             reference: 'toTimeField',
-            maxWidth: Traccar.Style.reportTime,
             value: new Date()
         }]
     }],
 
     buttons: [{
-        text: Strings.sharedSave,
+        glyph: 'xf00c@FontAwesome',
+        tooltip: Strings.sharedSave,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'onSaveClick'
     }, {
-        text: Strings.sharedCancel,
+        glyph: 'xf00d@FontAwesome',
+        tooltip: Strings.sharedCancel,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'closeView'
     }]
 });

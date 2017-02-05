@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2017 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,21 +29,33 @@ Ext.define('Traccar.view.SettingsMenuController', {
         'Traccar.view.Notifications',
         'Traccar.view.AttributeAliases',
         'Traccar.view.Statistics',
+        'Traccar.view.DeviceDistanceDialog',
+        'Traccar.view.Calendars',
         'Traccar.view.BaseWindow'
     ],
 
     init: function () {
-        var admin, readonly;
+        var admin, manager, readonly, deviceReadonly;
         admin = Traccar.app.getUser().get('admin');
+        manager = Traccar.app.getUser().get('userLimit') !== 0;
         readonly = Traccar.app.getPreference('readonly', false);
+        deviceReadonly = Traccar.app.getUser().get('deviceReadonly');
         if (admin) {
             this.lookupReference('settingsServerButton').setHidden(false);
-            this.lookupReference('settingsUsersButton').setHidden(false);
             this.lookupReference('settingsStatisticsButton').setHidden(false);
+            this.lookupReference('settingsDeviceDistanceButton').setHidden(false);
+        }
+        if (admin || manager) {
+            this.lookupReference('settingsUsersButton').setHidden(false);
         }
         if (admin || !readonly) {
+            this.lookupReference('settingsUserButton').setHidden(false);
             this.lookupReference('settingsGroupsButton').setHidden(false);
             this.lookupReference('settingsGeofencesButton').setHidden(false);
+            this.lookupReference('settingsNotificationsButton').setHidden(false);
+            this.lookupReference('settingsCalendarsButton').setHidden(false);
+        }
+        if (admin || (!deviceReadonly && !readonly)) {
             this.lookupReference('settingsAttributeAliasesButton').setHidden(false);
         }
     },
@@ -51,6 +63,7 @@ Ext.define('Traccar.view.SettingsMenuController', {
     onUserClick: function () {
         var dialog = Ext.create('Traccar.view.UserDialog');
         dialog.down('form').loadRecord(Traccar.app.getUser());
+        dialog.lookupReference('testMailButton').setHidden(false);
         dialog.show();
     },
 
@@ -118,6 +131,21 @@ Ext.define('Traccar.view.SettingsMenuController', {
             modal: false,
             items: {
                 xtype: 'statisticsView'
+            }
+        }).show();
+    },
+
+    onDeviceDistanceClick: function () {
+        var dialog = Ext.create('Traccar.view.DeviceDistanceDialog');
+        dialog.show();
+    },
+
+    onCalendarsClick: function () {
+        Ext.create('Traccar.view.BaseWindow', {
+            title: Strings.sharedCalendars,
+            modal: false,
+            items: {
+                xtype: 'calendarsView'
             }
         }).show();
     },

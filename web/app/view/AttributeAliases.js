@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
- * Copyright 2016 Andrey Kunitsyn (abyss@fox5.ru)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 Andrey Kunitsyn (andrey@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,9 @@ Ext.define('Traccar.view.AttributeAliases', {
     tbar: {
         xtype: 'editToolbar',
         items: ['-', {
+            xtype: 'tbtext',
+            html: Strings.sharedDevice
+        }, {
             xtype: 'combobox',
             reference: 'deviceField',
             store: 'Devices',
@@ -48,13 +51,18 @@ Ext.define('Traccar.view.AttributeAliases', {
         selectionchange: 'onSelectionChange'
     },
 
-    columns: [{
-        text: Strings.sharedAttribute,
-        dataIndex: 'attribute',
-        flex: 1
-    }, {
-        text: Strings.sharedAlias,
-        dataIndex: 'alias',
-        flex: 1
-    }]
+    forceFit: true,
+
+    columns: {
+        defaults: {
+            minWidth: Traccar.Style.columnWidthNormal
+        },
+        items: [{
+            text: Strings.sharedAttribute,
+            dataIndex: 'attribute'
+        }, {
+            text: Strings.sharedAlias,
+            dataIndex: 'alias'
+        }]
+    }
 });

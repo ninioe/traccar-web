@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,9 +36,13 @@ Ext.define('Traccar.view.UserGeofences', {
         beforeselect: 'onBeforeSelect'
     },
 
-    columns: [{
-        text: Strings.sharedName,
-        dataIndex: 'name',
-        flex: 1
-    }]
+    forceFit: true,
+
+    columns: {
+        items: [{
+            text: Strings.sharedName,
+            minWidth: Traccar.Style.columnWidthNormal,
+            dataIndex: 'name'
+        }]
+    }
 });

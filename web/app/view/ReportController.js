@@ -1,6 +1,6 @@
 /*
- * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
- * Copyright 2016 Andrey Kunitsyn (abyss@fox5.ru)
+ * Copyright 2015 - 2016 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 Andrey Kunitsyn (andrey@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,15 +33,41 @@ Ext.define('Traccar.view.ReportController', {
             controller: {
                 '*': {
                     selectdevice: 'selectDevice',
+                    showsingleevent: 'showSingleEvent',
+                    deselectfeature: 'deselectFeature'
+                },
+                'map': {
                     selectreport: 'selectReport'
+                }
+            },
+            store: {
+                '#ReportEvents': {
+                    add: 'loadEvents',
+                    load: 'loadEvents'
+                },
+                '#ReportRoute': {
+                    load: 'loadRoute'
                 }
             }
         }
     },
 
+    hideReports: function () {
+        Traccar.app.showReports(false);
+    },
+
+    getGrid: function () {
+        return this.getView().getComponent('grid');
+    },
+
+    getChart: function () {
+        return this.getView().getComponent('chart');
+    },
+
     onConfigureClick: function () {
         var dialog = Ext.create('Traccar.view.ReportConfigDialog');
         dialog.lookupReference('eventTypeField').setHidden(this.lookupReference('reportTypeField').getValue() !== 'events');
+        dialog.lookupReference('chartTypeField').setHidden(this.lookupReference('reportTypeField').getValue() !== 'chart');
         dialog.callingPanel = this;
         dialog.lookupReference('deviceField').setValue(this.deviceId);
         dialog.lookupReference('groupField').setValue(this.groupId);
@@ -49,6 +75,12 @@ Ext.define('Traccar.view.ReportController', {
             dialog.lookupReference('eventTypeField').setValue(this.eventType);
         } else {
             dialog.lookupReference('eventTypeField').setValue([Traccar.store.ReportEventTypes.allEvents]);
+        }
+        if (this.chartType !== undefined) {
+            dialog.lookupReference('chartTypeField').setValue(this.chartType);
+        }
+        if (this.showMarkers !== undefined) {
+            dialog.lookupReference('showMarkersField').setValue(this.showMarkers);
         }
         if (this.fromDate !== undefined) {
             dialog.lookupReference('fromDateField').setValue(this.fromDate);
@@ -72,7 +104,7 @@ Ext.define('Traccar.view.ReportController', {
         time = this.fromDate && this.fromTime && this.toDate && this.toTime;
         disabled = !reportType || !devices || !time;
         this.lookupReference('showButton').setDisabled(disabled);
-        this.lookupReference('csvButton').setDisabled(disabled);
+        this.lookupReference('exportButton').setDisabled(reportType === 'chart' || disabled);
     },
 
     onReportClick: function (button) {
@@ -90,7 +122,13 @@ Ext.define('Traccar.view.ReportController', {
                 this.toTime.getHours(), this.toTime.getMinutes(), this.toTime.getSeconds(), this.toTime.getMilliseconds());
 
             if (button.reference === 'showButton') {
-                store = this.getView().getStore();
+                if (reportType === 'chart') {
+                    store = this.getChart().getStore();
+                    this.getChart().setSeries([]);
+                } else {
+                    store = this.getGrid().getStore();
+                }
+                store.showMarkers = this.showMarkers;
                 store.load({
                     params: {
                         deviceId: this.deviceId,
@@ -100,14 +138,14 @@ Ext.define('Traccar.view.ReportController', {
                         to: to.toISOString()
                     }
                 });
-            } else if (button.reference === 'csvButton') {
-                url = this.getView().getStore().getProxy().url;
-                this.downloadCsv(url, {
+            } else if (button.reference === 'exportButton') {
+                url = this.getGrid().getStore().getProxy().url;
+                this.downloadFile(url, {
                     deviceId: this.deviceId,
                     groupId: this.groupId,
                     type: this.eventType,
-                    from: from.toISOString(),
-                    to: to.toISOString()
+                    from: Ext.Date.format(from, 'c'),
+                    to: Ext.Date.format(to, 'c')
                 });
             }
         }
@@ -119,29 +157,52 @@ Ext.define('Traccar.view.ReportController', {
     },
 
     clearReport: function (reportType) {
-        this.getView().getStore().removeAll();
-        if (reportType === 'trips') {
+        this.getGrid().getStore().removeAll();
+        if (reportType === 'trips' || reportType === 'events') {
             Ext.getStore('ReportRoute').removeAll();
+        }
+        if (reportType === 'chart') {
+            this.getChart().getStore().removeAll();
         }
     },
 
     onSelectionChange: function (selected) {
+        var report;
         if (selected.getCount() > 0) {
-            this.fireEvent('selectreport', selected.getLastSelected(), true);
+            report = selected.getLastSelected();
+            this.fireEvent('selectreport', report, true);
+            if (report instanceof Traccar.model.ReportTrip) {
+                this.selectTrip(report);
+            }
+            if (report instanceof Traccar.model.Event) {
+                this.selectEvent(report);
+            }
         }
     },
 
     selectDevice: function (device) {
         if (device) {
-            this.getView().getSelectionModel().deselectAll();
+            this.getGrid().getSelectionModel().deselectAll();
         }
     },
 
     selectReport: function (object, center) {
+        var positionEvent, reportType = this.lookupReference('reportTypeField').getValue();
         if (object instanceof Traccar.model.Position) {
-            this.getView().getSelectionModel().select([object], false, true);
-        } else if (object instanceof Traccar.model.ReportTrip) {
-            this.selectTrip(object);
+            if (reportType === 'route') {
+                this.getGrid().getSelectionModel().select([object], false, true);
+                this.getGrid().getView().focusRow(object);
+            } else if (reportType === 'events') {
+                positionEvent = this.getGrid().getStore().findRecord('positionId', object.get('id'), 0, false, true, true);
+                this.getGrid().getSelectionModel().select([positionEvent], false, true);
+                this.getGrid().getView().focusRow(positionEvent);
+            }
+        }
+    },
+
+    deselectFeature: function () {
+        if (this.lookupReference('reportTypeField').getValue() !== 'trips') {
+            this.getGrid().getSelectionModel().deselectAll();
         }
     },
 
@@ -149,6 +210,8 @@ Ext.define('Traccar.view.ReportController', {
         var from, to;
         from = new Date(trip.get('startTime'));
         to = new Date(trip.get('endTime'));
+        Ext.getStore('ReportRoute').removeAll();
+        Ext.getStore('ReportRoute').showMarkers = this.showMarkers;
         Ext.getStore('ReportRoute').load({
             params: {
                 deviceId: trip.get('deviceId'),
@@ -158,20 +221,122 @@ Ext.define('Traccar.view.ReportController', {
         });
     },
 
-    downloadCsv: function (requestUrl, requestParams) {
+    selectEvent: function (event) {
+        var position;
+        if (event.get('positionId')) {
+            position = Ext.getStore('ReportRoute').getById(event.get('positionId'));
+            if (position) {
+                this.fireEvent('selectreport', position, true);
+            }
+        }
+    },
+
+    loadEvents: function (store, data) {
+        var i, eventObject, positionIds = [];
+        Ext.getStore('ReportRoute').removeAll();
+        for (i = 0; i < data.length; i++) {
+            eventObject = data[i];
+            if (eventObject.get('positionId')) {
+                positionIds.push(eventObject.get('positionId'));
+            }
+        }
+        if (positionIds.length > 0) {
+            Ext.getStore('Positions').load({
+                params: {
+                    id: positionIds
+                },
+                scope: this,
+                callback: function (records, operation, success) {
+                    if (success) {
+                        Ext.getStore('ReportRoute').showMarkers = this.showMarkers;
+                        Ext.getStore('ReportRoute').add(records);
+                        if (records.length === 1) {
+                            this.fireEvent('selectreport', records[0], false);
+                        }
+                    }
+                }
+            });
+        }
+    },
+
+    loadRoute: function (store) {
+        var i, deviceIds, chartSeries, deviceStore;
+        if (this.lookupReference('reportTypeField').getValue() === 'chart') {
+            this.getChart().getAxes()[0].setTitle(
+                    Ext.getStore('ReportChartTypes').findRecord('key', this.chartType).get('name'));
+            chartSeries = [];
+            deviceIds = store.collect('deviceId');
+            for (i = 0; i < deviceIds.length; i++) {
+                deviceStore = new Ext.create('Ext.data.ChainedStore', {
+                    source: 'ReportRoute',
+                    filters: [{
+                        property: 'deviceId',
+                        value   : deviceIds[i]
+                    }]
+                });
+                chartSeries.push({
+                    type: 'line',
+                    store: deviceStore,
+                    yField: this.chartType,
+                    xField: 'fixTime',
+                    highlightCfg: {
+                        scaling: Traccar.Style.chartMarkerHighlightScaling
+                    },
+                    colors: [Traccar.app.getReportColor(deviceIds[i])],
+                    marker: {
+                        type: 'circle',
+                        radius: Traccar.Style.chartMarkerRadius,
+                        fill: Traccar.app.getReportColor(deviceIds[i])
+                    }
+                });
+            }
+            this.getChart().setSeries(chartSeries);
+        }
+    },
+
+    onChartMarkerClick: function (chart, item) {
+        this.fireEvent('selectreport', item.record, true);
+    },
+
+    showSingleEvent: function (eventId) {
+        this.lookupReference('reportTypeField').setValue('events');
+        Ext.getStore('Events').load({
+            id: eventId,
+            scope: this,
+            callback: function (records, operation, success) {
+                if (success) {
+                    Ext.getStore('ReportEvents').add(records);
+                    if (records.length > 0) {
+                        if (!records[0].get('positionId')) {
+                            if (Traccar.app.isMobile()) {
+                                Traccar.app.showReports(true);
+                            } else {
+                                this.getView().expand();
+                            }
+                        }
+                        this.getGrid().getSelectionModel().select([records[0]], false, true);
+                        this.getGrid().getView().focusRow(records[0]);
+                    }
+                }
+            }
+        });
+    },
+
+    downloadFile: function (requestUrl, requestParams) {
         Ext.Ajax.request({
             url: requestUrl,
             method: 'GET',
             params: requestParams,
             headers: {
-                Accept: 'text/csv'
+                Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             },
+            binary: true,
             success: function (response) {
-                var disposition, filename, type, blob, url, downloadUrl, elementA;
+                var disposition, filename, type, blob, url, downloadUrl;
                 disposition = response.getResponseHeader('Content-Disposition');
                 filename = disposition.slice(disposition.indexOf('=') + 1, disposition.length);
                 type = response.getResponseHeader('Content-Type');
-                blob = new Blob([response.responseText], {type: type});
+                blob = new Blob([response.responseBytes], {type: type});
                 if (typeof window.navigator.msSaveBlob !== 'undefined') {
                     // IE workaround
                     window.navigator.msSaveBlob(blob, filename);
@@ -179,11 +344,11 @@ Ext.define('Traccar.view.ReportController', {
                     url = window.URL || window.webkitURL;
                     downloadUrl = url.createObjectURL(blob);
                     if (filename) {
-                        elementA = document.createElement('a');
-                        elementA.href = downloadUrl;
-                        elementA.download = filename;
-                        document.body.appendChild(elementA);
-                        elementA.click();
+                        Ext.dom.Helper.append(Ext.getBody(), {
+                            tag: 'a',
+                            href: downloadUrl,
+                            download: filename
+                        }).click();
                     }
                     setTimeout(function () {
                         url.revokeObjectURL(downloadUrl);
@@ -199,81 +364,77 @@ Ext.define('Traccar.view.ReportController', {
         }
 
         if (newValue === 'route') {
-            this.getView().reconfigure('ReportRoute', this.routeColumns);
+            this.getGrid().reconfigure('ReportRoute', this.routeColumns);
+            this.getView().getLayout().setActiveItem('grid');
         } else if (newValue === 'events') {
-            this.getView().reconfigure('ReportEvents', this.eventsColumns);
+            this.getGrid().reconfigure('ReportEvents', this.eventsColumns);
+            this.getView().getLayout().setActiveItem('grid');
         } else if (newValue === 'summary') {
-            this.getView().reconfigure('ReportSummary', this.summaryColumns);
+            this.getGrid().reconfigure('ReportSummary', this.summaryColumns);
+            this.getView().getLayout().setActiveItem('grid');
         } else if (newValue === 'trips') {
-            this.getView().reconfigure('ReportTrips', this.tripsColumns);
+            this.getGrid().reconfigure('ReportTrips', this.tripsColumns);
+            this.getView().getLayout().setActiveItem('grid');
+        } else if (newValue === 'chart') {
+            this.getView().getLayout().setActiveItem('chart');
         }
 
         this.updateButtons();
     },
 
     routeColumns: [{
+        text: Strings.reportDeviceName,
+        dataIndex: 'deviceId',
+        renderer: Traccar.AttributeFormatter.getFormatter('deviceId')
+    }, {
         text: Strings.positionValid,
         dataIndex: 'valid',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('valid')
     }, {
         text: Strings.positionFixTime,
         dataIndex: 'fixTime',
-        flex: 1,
         xtype: 'datecolumn',
         renderer: Traccar.AttributeFormatter.getFormatter('fixTime')
     }, {
         text: Strings.positionLatitude,
         dataIndex: 'latitude',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('latitude')
     }, {
         text: Strings.positionLongitude,
         dataIndex: 'longitude',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('latitude')
     }, {
         text: Strings.positionAltitude,
         dataIndex: 'altitude',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('altitude')
     }, {
         text: Strings.positionSpeed,
         dataIndex: 'speed',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('speed')
     }, {
         text: Strings.positionAddress,
         dataIndex: 'address',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('address')
     }],
 
     eventsColumns: [{
         text: Strings.positionFixTime,
         dataIndex: 'serverTime',
-        flex: 1,
         xtype: 'datecolumn',
         renderer: Traccar.AttributeFormatter.getFormatter('serverTime')
     }, {
         text: Strings.reportDeviceName,
         dataIndex: 'deviceId',
-        flex: 1,
-        renderer: function (value) {
-            return Ext.getStore('Devices').findRecord('id', value).get('name');
-        }
+        renderer: Traccar.AttributeFormatter.getFormatter('deviceId')
     }, {
         text: Strings.sharedType,
         dataIndex: 'type',
-        flex: 1,
         renderer: function (value) {
-            var typeKey = 'event' + value.charAt(0).toUpperCase() + value.slice(1);
-            return Strings[typeKey];
+            return Traccar.app.getEventString(value);
         }
     }, {
         text: Strings.sharedGeofence,
         dataIndex: 'geofenceId',
-        flex: 1,
         renderer: function (value) {
             if (value !== 0) {
                 return Ext.getStore('Geofences').findRecord('id', value).get('name');
@@ -284,86 +445,66 @@ Ext.define('Traccar.view.ReportController', {
     summaryColumns: [{
         text: Strings.reportDeviceName,
         dataIndex: 'deviceId',
-        flex: 1,
-        renderer: function (value) {
-            return Ext.getStore('Devices').findRecord('id', value).get('name');
-        }
+        renderer: Traccar.AttributeFormatter.getFormatter('deviceId')
     }, {
         text: Strings.sharedDistance,
         dataIndex: 'distance',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('distance')
     }, {
         text: Strings.reportAverageSpeed,
         dataIndex: 'averageSpeed',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('speed')
     }, {
         text: Strings.reportMaximumSpeed,
         dataIndex: 'maxSpeed',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('speed')
     }, {
         text: Strings.reportEngineHours,
         dataIndex: 'engineHours',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('hours')
     }],
 
     tripsColumns: [{
         text: Strings.reportDeviceName,
         dataIndex: 'deviceId',
-        flex: 1,
-        renderer: function (value) {
-            return Ext.getStore('Devices').findRecord('id', value).get('name');
-        }
+        renderer: Traccar.AttributeFormatter.getFormatter('deviceId')
     }, {
         text: Strings.reportStartTime,
         dataIndex: 'startTime',
-        flex: 1,
         xtype: 'datecolumn',
         renderer: Traccar.AttributeFormatter.getFormatter('startTime')
     }, {
         text: Strings.reportStartAddress,
         dataIndex: 'startAddress',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('address')
     }, {
         text: Strings.reportEndTime,
         dataIndex: 'endTime',
-        flex: 1,
         xtype: 'datecolumn',
         renderer: Traccar.AttributeFormatter.getFormatter('endTime')
     }, {
         text: Strings.reportEndAddress,
         dataIndex: 'endAddress',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('address')
     }, {
         text: Strings.sharedDistance,
         dataIndex: 'distance',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('distance')
     }, {
         text: Strings.reportAverageSpeed,
         dataIndex: 'averageSpeed',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('speed')
     }, {
         text: Strings.reportMaximumSpeed,
         dataIndex: 'maxSpeed',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('speed')
     }, {
         text: Strings.reportDuration,
         dataIndex: 'duration',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('duration')
     }, {
         text: Strings.reportSpentFuel,
         dataIndex: 'spentFuel',
-        flex: 1,
         renderer: Traccar.AttributeFormatter.getFormatter('spentFuel')
     }]
-
 });

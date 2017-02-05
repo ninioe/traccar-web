@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,9 @@ Ext.define('Traccar.model.Position', {
         name: 'valid',
         type: 'boolean'
     }, {
+        name: 'accuracy',
+        type: 'float'
+    }, {
         name: 'latitude',
         type: 'float'
     }, {
@@ -56,6 +59,12 @@ Ext.define('Traccar.model.Position', {
         name: 'speed',
         type: 'float'
     }, {
+        name: 'speedConverted',
+        type: 'float',
+        calculate: function (data) {
+            return Ext.getStore('SpeedUnits').convertValue(data.speed, Traccar.app.getPreference('speedUnit'));
+        }
+    }, {
         name: 'course',
         type: 'float'
     }, {
@@ -63,5 +72,12 @@ Ext.define('Traccar.model.Position', {
         type: 'string'
     }, {
         name: 'attributes'
+    }, {
+        name: 'distanceConverted',
+        type: 'float',
+        calculate: function (data) {
+            return Ext.getStore('DistanceUnits').convertValue(data.attributes.distance,
+                    Traccar.app.getPreference('distanceUnit'));
+        }
     }]
 });

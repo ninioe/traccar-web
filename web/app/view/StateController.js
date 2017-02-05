@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2017 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,8 @@ Ext.define('Traccar.view.StateController', {
                 '*': {
                     selectdevice: 'selectDevice',
                     selectreport: 'selectReport',
-                    updatealiases: 'updateAliases'
+                    updatealiases: 'updateAliases',
+                    deselectfeature: 'deselectFeature'
                 }
             },
             store: {
@@ -42,7 +43,7 @@ Ext.define('Traccar.view.StateController', {
                     add: 'updateLatest',
                     update: 'updateLatest'
                 },
-                '#Positions': {
+                '#ReportRoute': {
                     clear: 'clearReport'
                 },
                 '#AttributeAliases': {
@@ -54,13 +55,15 @@ Ext.define('Traccar.view.StateController', {
     },
 
     init: function () {
+        var visible = !Traccar.app.getUser().get('deviceReadonly') && !Traccar.app.getPreference('readonly', false);
+        this.lookupReference('aliasEditButton').setVisible(visible);
         this.aliasesStore = Ext.getStore('AttributeAliases');
     },
 
     keys: (function () {
         var i, list, result;
         result = {};
-        list = ['fixTime', 'latitude', 'longitude', 'valid', 'altitude', 'speed', 'course', 'address', 'protocol'];
+        list = ['fixTime', 'latitude', 'longitude', 'valid', 'accuracy', 'altitude', 'speed', 'course', 'address', 'protocol'];
         for (i = 0; i < list.length; i++) {
             result[list[i]] = {
                 priority: i,
@@ -157,6 +160,12 @@ Ext.define('Traccar.view.StateController', {
         }
     },
 
+    deselectFeature: function () {
+        this.deviceId = null;
+        this.position = null;
+        Ext.getStore('Attributes').removeAll();
+    },
+
     clearReport: function (store) {
         this.position = null;
         Ext.getStore('Attributes').removeAll();
@@ -187,7 +196,7 @@ Ext.define('Traccar.view.StateController', {
     },
 
     updateAliases: function () {
-        if (this.position !== null) {
+        if (this.position) {
             this.updatePosition();
         }
     }

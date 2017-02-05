@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,11 +29,15 @@ Ext.define('Traccar.view.ServerDialog', {
         xtype: 'form',
         items: [{
             xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
             name: 'registration',
             fieldLabel: Strings.serverRegistration,
             allowBlank: false
         }, {
             xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
             name: 'readonly',
             fieldLabel: Strings.serverReadonly,
             allowBlank: false
@@ -88,11 +92,15 @@ Ext.define('Traccar.view.ServerDialog', {
             fieldLabel: Strings.serverZoom
         }, {
             xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
             name: 'twelveHourFormat',
             fieldLabel: Strings.settingsTwelveHourFormat,
             allowBlank: false
         }, {
             xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
             name: 'forceSettings',
             fieldLabel: Strings.serverForceSettings,
             allowBlank: false
@@ -117,12 +125,24 @@ Ext.define('Traccar.view.ServerDialog', {
         tooltip: Strings.sharedGetMapState,
         tooltipType: 'title'
     }, {
+        glyph: 'xf205@FontAwesome',
+        minWidth: 0,
+        handler: 'getToggleState',
+        tooltip: Strings.sharedGetToggleState,
+        tooltipType: 'title'
+    }, {
         xtype: 'tbfill'
     }, {
-        text: Strings.sharedSave,
+        glyph: 'xf00c@FontAwesome',
+        tooltip: Strings.sharedSave,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'onSaveClick'
     }, {
-        text: Strings.sharedCancel,
+        glyph: 'xf00d@FontAwesome',
+        tooltip: Strings.sharedCancel,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'closeView'
     }]
 });

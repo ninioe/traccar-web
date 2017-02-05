@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
- * Copyright 2016 Andrey Kunitsyn (abyss@fox5.ru)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 Andrey Kunitsyn (andrey@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,10 +42,16 @@ Ext.define('Traccar.view.AttributeAliasDialog', {
     },
 
     buttons: [{
-        text: Strings.sharedSave,
+        glyph: 'xf00c@FontAwesome',
+        tooltip: Strings.sharedSave,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'onSaveClick'
     }, {
-        text: Strings.sharedCancel,
+        glyph: 'xf00d@FontAwesome',
+        tooltip: Strings.sharedCancel,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'closeView'
     }]
 });

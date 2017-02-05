@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,8 @@ Ext.define('Traccar.Application', {
         'Notification',
         'AttributeAlias',
         'ReportSummary',
-        'ReportTrip'
+        'ReportTrip',
+        'Calendar'
     ],
 
     stores: [
@@ -69,12 +70,32 @@ Ext.define('Traccar.Application', {
         'ReportSummary',
         'ReportTypes',
         'ReportEventTypes',
-        'Statistics'
+        'ReportChartTypes',
+        'Statistics',
+        'DeviceImages',
+        'Calendars',
+        'AllCalendars'
     ],
 
     controllers: [
         'Root'
     ],
+
+    isMobile: function () {
+        return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+    },
+
+    getEventString: function (eventType) {
+        var key = 'event' + eventType.charAt(0).toUpperCase() + eventType.slice(1);
+        return Strings[key] || key;
+    },
+
+    showReports: function (show) {
+        var rootPanel = Ext.getCmp('rootPanel');
+        if (rootPanel) {
+            rootPanel.setActiveItem(show ? 1 : 0);
+        }
+    },
 
     setUser: function (data) {
         var reader = Ext.create('Ext.data.reader.Json', {
@@ -106,17 +127,35 @@ Ext.define('Traccar.Application', {
         }
     },
 
+    getAttributePreference: function (key, defaultValue) {
+        if (this.getServer().get('forceSettings')) {
+            return this.getServer().get('attributes')[key] || this.getUser().get('attributes')[key] || defaultValue;
+        } else {
+            return this.getUser().get('attributes')[key] || this.getServer().get('attributes')[key] || defaultValue;
+        }
+    },
+
+    getReportColor: function (deviceId) {
+        var index, reportColor, device = Ext.getStore('Devices').getById(deviceId);
+        if (device) {
+            reportColor = device.get('attributes')['web.reportColor'];
+        }
+        if (reportColor) {
+            return reportColor;
+        } else {
+            index = 0;
+            if (deviceId !== undefined) {
+                index = deviceId % Traccar.Style.mapRouteColor.length;
+            }
+            return Traccar.Style.mapRouteColor[index];
+        }
+    },
+
     showError: function (response) {
-        var data;
         if (Ext.isString(response)) {
             Ext.Msg.alert(Strings.errorTitle, response);
         } else if (response.responseText) {
-            data = Ext.decode(response.responseText);
-            if (data.details) {
-                Ext.Msg.alert(Strings.errorTitle, data.details);
-            } else {
-                Ext.Msg.alert(Strings.errorTitle, data.message);
-            }
+            Ext.Msg.alert(Strings.errorTitle, response.responseText);
         } else if (response.statusText) {
             Ext.Msg.alert(Strings.errorTitle, response.statusText);
         } else {

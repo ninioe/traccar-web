@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2017 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,41 @@ Ext.define('Traccar.view.UserDialogController', {
     extend: 'Traccar.view.MapPickerDialogController',
     alias: 'controller.userDialog',
 
-    init: function () {
+    onShow: function () {
         if (Traccar.app.getUser().get('admin')) {
-            this.lookupReference('adminField').setDisabled(false);
-            this.lookupReference('readonlyField').setDisabled(false);
+            this.lookupReference('adminField').setHidden(false);
+            this.lookupReference('deviceLimitField').setDisabled(false);
+            this.lookupReference('userLimitField').setDisabled(false);
         }
+        if (Traccar.app.getUser().get('admin') ||
+                Traccar.app.getUser().getId() !== this.getView().down('form').getRecord().getId()) {
+            this.lookupReference('readonlyField').setHidden(false);
+            this.lookupReference('disabledField').setHidden(false);
+            this.lookupReference('expirationTimeField').setDisabled(false);
+            this.lookupReference('deviceReadonlyField').setDisabled(false);
+        }
+    },
+
+    symbols: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+
+    generateToken: function () {
+        var i, newToken = '';
+
+        for (i = 0; i < 32; i++) {
+            newToken += this.symbols.charAt(Math.floor(Math.random() * this.symbols.length));
+        }
+
+        this.lookupReference('tokenField').setValue(newToken);
+    },
+
+    testMail: function () {
+        Ext.Ajax.request({
+            url: 'api/users/notifications/test',
+            method: 'POST',
+            failure: function (response) {
+                Traccar.app.showError(response);
+            }
+        });
     },
 
     onSaveClick: function (button) {

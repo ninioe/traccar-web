@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,39 +26,46 @@ Ext.define('Traccar.view.State', {
     controller: 'state',
     store: 'Attributes',
 
-    header: {
-        xtype: 'header',
-        title: Strings.stateTitle,
+    tbar: {
+        componentCls: 'toolbar-header-style',
         items: [{
-                xtype: 'tbfill'
-            }, {
-                xtype: 'button',
-                disabled: true,
-                handler: 'onAliasEditClick',
-                reference: 'aliasEditButton',
-                glyph: 'xf040@FontAwesome',
-                tooltip: Strings.sharedEdit,
-                tooltipType: 'title'
-            }]
+            xtype: 'tbtext',
+            html: Strings.stateTitle,
+            baseCls: 'x-panel-header-title-default'
+        }, {
+            xtype: 'tbfill'
+        }, {
+            xtype: 'button',
+            disabled: true,
+            handler: 'onAliasEditClick',
+            reference: 'aliasEditButton',
+            glyph: 'xf02b@FontAwesome',
+            tooltip: Strings.sharedEdit,
+            tooltipType: 'title'
+        }]
     },
 
     listeners: {
         selectionchange: 'onSelectionChange'
     },
 
-    columns: [{
-        text: Strings.stateName,
-        dataIndex: 'name',
-        flex: 1
-    }, {
-        text: Strings.stateValue,
-        dataIndex: 'value',
-        flex: 1,
-        renderer: function (value, metaData, record) {
-            if (record.get('attribute') === 'alarm') {
-                metaData.tdCls = 'view-color-red';
+    columns: {
+        defaults: {
+            minWidth: Traccar.Style.columnWidthNormal,
+            flex: 1
+        },
+        items: [{
+            text: Strings.stateName,
+            dataIndex: 'name'
+        }, {
+            text: Strings.stateValue,
+            dataIndex: 'value',
+            renderer: function (value, metaData, record) {
+                if (record.get('attribute') === 'alarm') {
+                    metaData.tdCls = 'view-color-red';
+                }
+                return value;
             }
-            return value;
-        }
-    }]
+        }]
+    }
 });

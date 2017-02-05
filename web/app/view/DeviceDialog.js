@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,7 @@
 Ext.define('Traccar.view.DeviceDialog', {
     extend: 'Traccar.view.BaseEditDialog',
 
-    requires: [
-        'Traccar.view.BaseEditDialog'
-    ],
-
-    controller: 'baseEditDialog',
-    title: Strings.deviceDialog,
+    title: Strings.sharedDevice,
 
     items: {
         xtype: 'form',
@@ -45,6 +40,34 @@ Ext.define('Traccar.view.DeviceDialog', {
             queryMode: 'local',
             displayField: 'name',
             valueField: 'id'
+        }, {
+            xtype: 'textfield',
+            name: 'phone',
+            fieldLabel: Strings.devicePhone
+        }, {
+            xtype: 'textfield',
+            name: 'model',
+            fieldLabel: Strings.deviceModel
+        }, {
+            xtype: 'textfield',
+            name: 'contact',
+            fieldLabel: Strings.deviceContact
+        }, {
+            xtype: 'combobox',
+            name: 'category',
+            fieldLabel: Strings.deviceCategory,
+            store: 'DeviceImages',
+            queryMode: 'local',
+            displayField: 'name',
+            valueField: 'key',
+            listConfig: {
+                getInnerTpl: function () {
+                    return '<table><tr valign="middle" ><td><div align="center" style="width:40px;height:40px;" >' +
+                    '{[new XMLSerializer().serializeToString(Traccar.DeviceImages.getImageSvg(' +
+                    'Traccar.Style.mapColorOnline, false, 0, values.key))]}</div></td>' +
+                    '<td>- {name}</td></tr></table>';
+                }
+            }
         }]
     }
 });

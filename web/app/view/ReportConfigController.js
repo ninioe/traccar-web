@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
- * Copyright 2016 Andrey Kunitsyn (abyss@fox5.ru)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 Andrey Kunitsyn (andrey@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,13 +35,11 @@ Ext.define('Traccar.view.ReportConfigController', {
             Ext.create('Traccar.store.AllNotifications').load({
                 scope: this,
                 callback: function (records, operation, success) {
-                    var i, value, name, typeKey;
+                    var i, value;
                     if (success) {
                         for (i = 0; i < records.length; i++) {
                             value = records[i].get('type');
-                            typeKey = 'event' + value.charAt(0).toUpperCase() + value.slice(1);
-                            name = Strings[typeKey];
-                            store.add({type: value, name: name});
+                            store.add({type: value, name: Traccar.app.getEventString(value)});
                         }
                     }
                 }
@@ -60,6 +58,8 @@ Ext.define('Traccar.view.ReportConfigController', {
             eventType = [Traccar.store.ReportEventTypes.allEvents];
         }
         this.getView().callingPanel.eventType = eventType;
+        this.getView().callingPanel.chartType = this.lookupReference('chartTypeField').getValue();
+        this.getView().callingPanel.showMarkers = this.lookupReference('showMarkersField').getValue();
         this.getView().callingPanel.fromDate = this.lookupReference('fromDateField').getValue();
         this.getView().callingPanel.fromTime = this.lookupReference('fromTimeField').getValue();
         this.getView().callingPanel.toDate = this.lookupReference('toDateField').getValue();

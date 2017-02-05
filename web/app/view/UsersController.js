@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2017 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 - 2017 Andrey Kunitsyn (andrey@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
  */
 
 Ext.define('Traccar.view.UsersController', {
-    extend: 'Ext.app.ViewController',
+    extend: 'Traccar.view.EditToolbarController',
     alias: 'controller.users',
 
     requires: [
@@ -24,49 +25,34 @@ Ext.define('Traccar.view.UsersController', {
         'Traccar.view.UserDevices',
         'Traccar.view.UserGroups',
         'Traccar.view.UserGeofences',
+        'Traccar.view.UserCalendars',
+        'Traccar.view.UserUsers',
         'Traccar.view.Notifications',
         'Traccar.view.BaseWindow',
         'Traccar.model.User'
     ],
 
+    objectModel: 'Traccar.model.User',
+    objectDialog: 'Traccar.view.UserDialog',
+    removeTitle: Strings.settingsUser,
+
     init: function () {
         Ext.getStore('Users').load();
+        this.lookupReference('userUsersButton').setHidden(!Traccar.app.getUser().get('admin'));
     },
 
     onAddClick: function () {
         var user, dialog;
         user = Ext.create('Traccar.model.User');
+        if (Traccar.app.getUser().get('admin')) {
+            user.set('deviceLimit', -1);
+        }
+        if (Traccar.app.getUser().get('expirationTime')) {
+            user.set('expirationTime', Traccar.app.getUser().get('expirationTime'));
+        }
         dialog = Ext.create('Traccar.view.UserDialog');
         dialog.down('form').loadRecord(user);
         dialog.show();
-    },
-
-    onEditClick: function () {
-        var user, dialog;
-        user = this.getView().getSelectionModel().getSelection()[0];
-        dialog = Ext.create('Traccar.view.UserDialog');
-        dialog.down('form').loadRecord(user);
-        dialog.show();
-    },
-
-    onRemoveClick: function () {
-        var user = this.getView().getSelectionModel().getSelection()[0];
-        Ext.Msg.show({
-            title: Strings.settingsUser,
-            message: Strings.sharedRemoveConfirm,
-            buttons: Ext.Msg.YESNO,
-            buttonText: {
-                yes: Strings.sharedRemove,
-                no: Strings.sharedCancel
-            },
-            fn: function (btn) {
-                var store = Ext.getStore('Users');
-                if (btn === 'yes') {
-                    store.remove(user);
-                    store.sync();
-                }
-            }
-        });
     },
 
     onDevicesClick: function () {
@@ -129,13 +115,45 @@ Ext.define('Traccar.view.UsersController', {
         }).show();
     },
 
-    onSelectionChange: function (selected) {
-        var disabled = selected.length > 0;
-        this.lookupReference('toolbarEditButton').setDisabled(disabled);
-        this.lookupReference('toolbarRemoveButton').setDisabled(disabled);
+    onCalendarsClick: function () {
+        var user = this.getView().getSelectionModel().getSelection()[0];
+        Ext.create('Traccar.view.BaseWindow', {
+            title: Strings.sharedCalendars,
+            items: {
+                xtype: 'userCalendarsView',
+                baseObjectName: 'userId',
+                linkObjectName: 'calendarId',
+                storeName: 'AllCalendars',
+                linkStoreName: 'Calendars',
+                urlApi: 'api/permissions/calendars',
+                baseObject: user.getId()
+            }
+        }).show();
+    },
+
+    onUsersClick: function () {
+        var user = this.getView().getSelectionModel().getSelection()[0];
+        Ext.create('Traccar.view.BaseWindow', {
+            title: Strings.settingsUsers,
+            items: {
+                xtype: 'userUsersView',
+                baseObjectName: 'userId',
+                linkObjectName: 'managedUserId',
+                storeName: 'Users',
+                urlApi: 'api/permissions/users',
+                baseObject: user.getId()
+            }
+        }).show();
+    },
+
+    onSelectionChange: function (selection, selected) {
+        var disabled = selected.length === 0;
         this.lookupReference('userDevicesButton').setDisabled(disabled);
         this.lookupReference('userGroupsButton').setDisabled(disabled);
         this.lookupReference('userGeofencesButton').setDisabled(disabled);
         this.lookupReference('userNotificationsButton').setDisabled(disabled);
+        this.lookupReference('userCalendarsButton').setDisabled(disabled);
+        this.lookupReference('userUsersButton').setDisabled(disabled || selected[0].get('userLimit') === 0);
+        this.callParent(arguments);
     }
 });

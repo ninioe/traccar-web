@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,6 +88,33 @@ Ext.define('Traccar.view.CommandDialog', {
                 fieldLabel: Strings.commandMessage,
                 name: 'message',
                 hidden: true
+            }]
+        }, {
+            xtype: 'fieldcontainer',
+            reference: 'paramSetTimezone',
+            name: 'attributes',
+            hidden: true,
+
+            items: [{
+                xtype: 'numberfield',
+                fieldLabel: Strings.commandTimezone,
+                name: 'timezone',
+                minValue: -12,
+                step: 0.5,
+                maxValue: +14
+            }]
+        }, {
+            xtype: 'fieldcontainer',
+            reference: 'paramSetIndicator',
+            name: 'attributes',
+            hidden: true,
+
+            items: [{
+                xtype: 'numberfield',
+                fieldLabel: Strings.commandData,
+                name: 'data',
+                minValue: 0,
+                maxValue: 99
             }]
         }, {
             xtype: 'textfield',

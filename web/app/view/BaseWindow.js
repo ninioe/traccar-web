@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,5 +21,13 @@ Ext.define('Traccar.view.BaseWindow', {
     width: Traccar.Style.windowWidth,
     height: Traccar.Style.windowHeight,
     layout: 'fit',
-    modal: true
+    modal: true,
+
+    initComponent: function () {
+        if (window.innerWidth < Traccar.Style.windowWidth || window.innerHeight < Traccar.Style.windowHeight) {
+            this.maximized = true;
+            this.style = 'border-width: 0';
+        }
+        this.callParent();
+    }
 });

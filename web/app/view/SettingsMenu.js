@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2016 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,50 +24,75 @@ Ext.define('Traccar.view.SettingsMenu', {
     ],
 
     glyph: 'xf013@FontAwesome',
-    text: Strings.settingsTitle,
+    tooltip: Strings.settingsTitle,
+    tooltipType: 'title',
 
     menu: {
         controller: 'settings',
 
         items: [{
+            hidden: true,
             text: Strings.settingsUser,
-            handler: 'onUserClick'
+            glyph: 'xf007@FontAwesome',
+            handler: 'onUserClick',
+            reference: 'settingsUserButton'
         }, {
             hidden: true,
             text: Strings.settingsGroups,
+            glyph: 'xf247@FontAwesome',
             handler: 'onGroupsClick',
             reference: 'settingsGroupsButton'
         }, {
             hidden: true,
             text: Strings.sharedGeofences,
+            glyph: 'xf21d@FontAwesome',
             handler: 'onGeofencesClick',
             reference: 'settingsGeofencesButton'
         }, {
-            text: Strings.settingsServer,
             hidden: true,
+            text: Strings.settingsServer,
+            glyph: 'xf0ad@FontAwesome',
             handler: 'onServerClick',
             reference: 'settingsServerButton'
         }, {
-            text: Strings.settingsUsers,
             hidden: true,
+            text: Strings.settingsUsers,
+            glyph: 'xf0c0@FontAwesome',
             handler: 'onUsersClick',
             reference: 'settingsUsersButton'
         }, {
+            hidden: true,
             text: Strings.sharedNotifications,
+            glyph: 'xf003@FontAwesome',
             handler: 'onNotificationsClick',
             reference: 'settingsNotificationsButton'
         }, {
             hidden: true,
             text: Strings.sharedAttributeAliases,
+            glyph: 'xf02c@FontAwesome',
             handler: 'onAttributeAliasesClick',
             reference: 'settingsAttributeAliasesButton'
         }, {
             hidden: true,
+            text: Strings.sharedDeviceDistance,
+            glyph: 'xf0e4@FontAwesome',
+            handler: 'onDeviceDistanceClick',
+            reference: 'settingsDeviceDistanceButton'
+        }, {
+            hidden: true,
             text: Strings.statisticsTitle,
+            glyph: 'xf080@FontAwesome',
             handler: 'onStatisticsClick',
             reference: 'settingsStatisticsButton'
         }, {
+            hidden: true,
+            text: Strings.sharedCalendars,
+            glyph: 'xf073@FontAwesome',
+            handler: 'onCalendarsClick',
+            reference: 'settingsCalendarsButton'
+        }, {
             text: Strings.loginLogout,
+            glyph: 'xf08b@FontAwesome',
             handler: 'onLogoutClick'
         }]
     }

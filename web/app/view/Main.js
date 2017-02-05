@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,8 @@ Ext.define('Traccar.view.Main', {
         layout: 'border',
         width: Traccar.Style.deviceWidth,
         title: Strings.devicesAndState,
+        titleCollapse: true,
+        floatable: false,
 
         defaults: {
             split: true,
@@ -62,7 +64,6 @@ Ext.define('Traccar.view.Main', {
     }, {
         region: 'center',
         xtype: 'mapView',
-        header: true,
         collapsible: false
     }]
 });

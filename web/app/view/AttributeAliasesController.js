@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
- * Copyright 2016 Andrey Kunitsyn (abyss@fox5.ru)
+ * Copyright 2016 - 2017 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 - 2017 Andrey Kunitsyn (andrey@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  */
 
 Ext.define('Traccar.view.AttributeAliasesController', {
-    extend: 'Ext.app.ViewController',
+    extend: 'Traccar.view.EditToolbarController',
     alias: 'controller.attributeAliases',
 
     requires: [
@@ -25,9 +25,13 @@ Ext.define('Traccar.view.AttributeAliasesController', {
         'Traccar.model.AttributeAlias'
     ],
 
+    objectModel: 'Traccar.model.AttributeAlias',
+    objectDialog: 'Traccar.view.AttributeAliasDialog',
+    removeTitle: Strings.sharedAttributeAlias,
+
     init: function () {
-        var admin = Traccar.app.getUser().get('admin');
-        this.lookupReference('deviceField').setStore(admin ? 'AllDevices' : 'Devices');
+        var manager = Traccar.app.getUser().get('admin') || Traccar.app.getUser().get('userLimit') > 0;
+        this.lookupReference('deviceField').setStore(manager ? 'AllDevices' : 'Devices');
         this.lookupReference('toolbarAddButton').setDisabled(true);
         this.lookupReference('toolbarEditButton').setDisabled(true);
         this.lookupReference('toolbarRemoveButton').setDisabled(true);
@@ -49,36 +53,6 @@ Ext.define('Traccar.view.AttributeAliasesController', {
         dialog.show();
     },
 
-    onEditClick: function () {
-        var attributeAlias, dialog;
-        attributeAlias = this.getView().getSelectionModel().getSelection()[0];
-        attributeAlias.store = Ext.getStore('AttributeAliases');
-        dialog = Ext.create('Traccar.view.AttributeAliasDialog');
-        dialog.down('form').loadRecord(attributeAlias);
-        dialog.show();
-    },
-
-    onRemoveClick: function () {
-        var attributeAlias = this.getView().getSelectionModel().getSelection()[0];
-        Ext.Msg.show({
-            title: Strings.sharedAttributeAlias,
-            message: Strings.sharedRemoveConfirm,
-            buttons: Ext.Msg.YESNO,
-            buttonText: {
-                yes: Strings.sharedRemove,
-                no: Strings.sharedCancel
-            },
-            scope: this,
-            fn: function (btn) {
-                var store = Ext.getStore('AttributeAliases');
-                if (btn === 'yes') {
-                    store.remove(attributeAlias);
-                    store.sync();
-                }
-            }
-        });
-    },
-
     onSelectionChange: function (selected) {
         var disabled = !this.lookupReference('deviceField').getValue();
         this.lookupReference('toolbarAddButton').setDisabled(disabled);
@@ -88,11 +62,11 @@ Ext.define('Traccar.view.AttributeAliasesController', {
     },
 
     onDeviceChange: function (combobox, newValue, oldValue) {
-        var admin = Traccar.app.getUser().get('admin');
+        var manager = Traccar.app.getUser().get('admin') || Traccar.app.getUser().get('userLimit') > 0;
         this.onSelectionChange('');
         if (newValue !== null) {
             this.getView().getStore().filter('deviceId', newValue);
-            if (admin && this.getView().getStore().getCount() === 0) {
+            if (manager && this.getView().getStore().getCount() === 0) {
                 Ext.getStore('AttributeAliases').getProxy().setExtraParam('deviceId', newValue);
                 Ext.getStore('AttributeAliases').load({
                     addRecords: true

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2017 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,17 +44,21 @@ Ext.define('Traccar.view.UserDialog', {
             allowBlank: false
         }, {
             xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
             name: 'readonly',
             fieldLabel: Strings.serverReadonly,
             allowBlank: false,
-            disabled: true,
+            hidden: true,
             reference: 'readonlyField'
         }, {
             xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
             name: 'admin',
             fieldLabel: Strings.userAdmin,
             allowBlank: false,
-            disabled: true,
+            hidden: true,
             reference: 'adminField'
         }, {
             xtype: 'combobox',
@@ -99,6 +103,8 @@ Ext.define('Traccar.view.UserDialog', {
             fieldLabel: Strings.serverZoom
         }, {
             xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
             name: 'twelveHourFormat',
             fieldLabel: Strings.settingsTwelveHourFormat,
             allowBlank: false
@@ -110,7 +116,58 @@ Ext.define('Traccar.view.UserDialog', {
             displayField: 'name',
             valueField: 'key',
             editable: false
+        }, {
+            xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
+            name: 'disabled',
+            fieldLabel: Strings.userDisabled,
+            hidden: true,
+            reference: 'disabledField'
+        }, {
+            xtype: 'datefield',
+            name: 'expirationTime',
+            fieldLabel: Strings.userExpirationTime,
+            disabled: true,
+            reference: 'expirationTimeField',
+            startDay: Traccar.Style.weekStartDay,
+            format: Traccar.Style.dateFormat
+        }, {
+            xtype: 'numberfield',
+            name: 'deviceLimit',
+            fieldLabel: Strings.userDeviceLimit,
+            disabled: true,
+            reference: 'deviceLimitField'
+        }, {
+            xtype: 'numberfield',
+            name: 'userLimit',
+            fieldLabel: Strings.userUserLimit,
+            disabled: true,
+            reference: 'userLimitField'
+        }, {
+            xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
+            name: 'deviceReadonly',
+            fieldLabel: Strings.userDeviceReadonly,
+            disabled: true,
+            reference: 'deviceReadonlyField'
+        }, {
+            xtype: 'textfield',
+            name: 'token',
+            reference: 'tokenField',
+            fieldLabel: Strings.userToken,
+            triggers: {
+                generate: {
+                    cls: 'iconCls: x-fa fa-refresh',
+                    handler: 'generateToken'
+                }
+            }
         }]
+    },
+
+    listeners: {
+        show: 'onShow'
     },
 
     buttons: [{
@@ -123,12 +180,32 @@ Ext.define('Traccar.view.UserDialog', {
         tooltip: Strings.sharedGetMapState,
         tooltipType: 'title'
     }, {
+        glyph: 'xf205@FontAwesome',
+        minWidth: 0,
+        handler: 'getToggleState',
+        tooltip: Strings.sharedGetToggleState,
+        tooltipType: 'title'
+    }, {
+        glyph: 'xf003@FontAwesome',
+        minWidth: 0,
+        handler: 'testMail',
+        hidden: true,
+        reference: 'testMailButton',
+        tooltip: Strings.sharedTestMail,
+        tooltipType: 'title'
+    }, {
         xtype: 'tbfill'
     }, {
-        text: Strings.sharedSave,
+        glyph: 'xf00c@FontAwesome',
+        tooltip: Strings.sharedSave,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'onSaveClick'
     }, {
-        text: Strings.sharedCancel,
+        glyph: 'xf00d@FontAwesome',
+        tooltip: Strings.sharedCancel,
+        tooltipType: 'title',
+        minWidth: 0,
         handler: 'closeView'
     }]
 });

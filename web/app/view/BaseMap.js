@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  */
 
 Ext.define('Traccar.view.BaseMap', {
-    extend: 'Ext.form.Panel',
+    extend: 'Ext.panel.Panel',
     xtype: 'baseMapView',
 
     layout: 'fit',
@@ -120,9 +120,17 @@ Ext.define('Traccar.view.BaseMap', {
         });
 
         this.map.on('click', function (e) {
-            this.map.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
-                this.fireEvent('selectfeature', feature);
-            }, this);
+            if (this.map.hasFeatureAtPixel(e.pixel, {
+                layerFilter: function (layer) {
+                    return !layer.get('name');
+                }
+            })) {
+                this.map.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
+                    this.fireEvent('selectfeature', feature);
+                }.bind(this));
+            } else {
+                this.fireEvent('deselectfeature');
+            }
         }, this);
     },
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ Ext.define('Traccar.view.Login', {
 
     controller: 'login',
 
-    title: Strings.loginTitle,
+    header: false,
     closable: false,
     modal: false,
 
@@ -41,6 +41,16 @@ Ext.define('Traccar.view.Login', {
         },
 
         items: [{
+            xtype: 'image',
+            src: 'logo.svg',
+            alt: Strings.loginLogo,
+            width: 180,
+            height: 48,
+            style: {
+                display: 'block',
+                margin: '10px auto 25px'
+            }
+        }, {
             xtype: 'combobox',
             name: 'language',
             fieldLabel: Strings.loginLanguage,
@@ -79,6 +89,8 @@ Ext.define('Traccar.view.Login', {
             inputAttrTpl: ['autocomplete="on"']
         }, {
             xtype: 'checkboxfield',
+            inputValue: true,
+            uncheckedValue: false,
             reference: 'rememberField',
             fieldLabel: Strings.userRemember
         }, {

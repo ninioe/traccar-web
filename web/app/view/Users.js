@@ -1,5 +1,6 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2017 Anton Tananaev (anton@traccar.org)
+ * Copyright 2016 - 2017 Andrey Kunitsyn (andrey@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,25 +33,47 @@ Ext.define('Traccar.view.Users', {
     tbar: {
         xtype: 'editToolbar',
         items: [{
-            text: Strings.deviceTitle,
-            disabled: true,
-            handler: 'onDevicesClick',
-            reference: 'userDevicesButton'
-        }, {
-            text: Strings.settingsGroups,
-            disabled: true,
-            handler: 'onGroupsClick',
-            reference: 'userGroupsButton'
-        }, {
-            text: Strings.sharedGeofences,
             disabled: true,
             handler: 'onGeofencesClick',
-            reference: 'userGeofencesButton'
+            reference: 'userGeofencesButton',
+            glyph: 'xf21d@FontAwesome',
+            tooltip: Strings.sharedGeofences,
+            tooltipType: 'title'
         }, {
-            text: Strings.sharedNotifications,
+            disabled: true,
+            handler: 'onDevicesClick',
+            reference: 'userDevicesButton',
+            glyph: 'xf248@FontAwesome',
+            tooltip: Strings.deviceTitle,
+            tooltipType: 'title'
+        }, {
+            disabled: true,
+            handler: 'onGroupsClick',
+            reference: 'userGroupsButton',
+            glyph: 'xf247@FontAwesome',
+            tooltip: Strings.settingsGroups,
+            tooltipType: 'title'
+        }, {
+            disabled: true,
+            handler: 'onUsersClick',
+            reference: 'userUsersButton',
+            glyph: 'xf0c0@FontAwesome',
+            tooltip: Strings.settingsUsers,
+            tooltipType: 'title'
+        }, {
             disabled: true,
             handler: 'onNotificationsClick',
-            reference: 'userNotificationsButton'
+            reference: 'userNotificationsButton',
+            glyph: 'xf003@FontAwesome',
+            tooltip: Strings.sharedNotifications,
+            tooltipType: 'title'
+        }, {
+            disabled: true,
+            handler: 'onCalendarsClick',
+            reference: 'userCalendarsButton',
+            glyph: 'xf073@FontAwesome',
+            tooltip: Strings.sharedCalendars,
+            tooltipType: 'title'
         }]
     },
 
@@ -58,17 +81,29 @@ Ext.define('Traccar.view.Users', {
         selectionchange: 'onSelectionChange'
     },
 
-    columns: [{
-        text: Strings.sharedName,
-        dataIndex: 'name',
-        flex: 1
-    }, {
-        text: Strings.userEmail,
-        dataIndex: 'email',
-        flex: 1
-    }, {
-        text: Strings.userAdmin,
-        dataIndex: 'admin',
-        flex: 1
-    }]
+    forceFit: true,
+
+    columns: {
+        defaults: {
+            minWidth: Traccar.Style.columnWidthNormal
+        },
+        items: [{
+            text: Strings.sharedName,
+            dataIndex: 'name'
+        }, {
+            text: Strings.userEmail,
+            dataIndex: 'email'
+        }, {
+            text: Strings.userAdmin,
+            dataIndex: 'admin'
+        }, {
+            text: Strings.userDisabled,
+            dataIndex: 'disabled'
+        }, {
+            text: Strings.userExpirationTime,
+            dataIndex: 'expirationTime',
+            hidden: true,
+            renderer: Traccar.AttributeFormatter.getFormatter('expirationTime')
+        }]
+    }
 });

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,9 @@ Ext.define('Traccar.model.Geofence', {
     }, {
         name: 'area',
         type: 'string'
+    }, {
+        name: 'calendarId',
+        type: 'int'
     }, {
         name: 'attributes'
     }]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,50 +19,12 @@ Ext.define('Traccar.view.NotificationsController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.notificationsController',
 
-    requires: [
-        'Traccar.store.Notifications'
-    ],
-
     init: function () {
-        this.userId = this.getView().user.getId();
         this.getView().getStore().load({
-            scope: this,
-            callback: function (records, operation, success) {
-                var notificationsStore = Ext.create('Traccar.store.Notifications');
-                notificationsStore.load({
-                    params: {
-                        userId: this.userId
-                    },
-                    scope: this,
-                    callback: function (records, operation, success) {
-                        var i, index, attributes, storeRecord;
-                        if (success) {
-                            for (i = 0; i < records.length; i++) {
-                                index = this.getView().getStore().findExact('type', records[i].get('type'));
-                                attributes = records[i].get('attributes');
-                                storeRecord = this.getView().getStore().getAt(index);
-                                storeRecord.set('attributes', attributes);
-                                storeRecord.commit();
-                            }
-                        }
-                    }
-                });
+            params: {
+                userId: this.getView().user.getId()
             }
         });
-    },
-
-    onBeforeCheckChange: function (column, rowIndex, checked, eOpts) {
-        var fields, record, data;
-        fields = column.dataIndex.split('\.', 2);
-        record = this.getView().getStore().getAt(rowIndex);
-        data = record.get(fields[0]);
-        if (!data[fields[1]]) {
-            data[fields[1]] = 'true';
-        } else {
-            delete data[fields[1]];
-        }
-        record.set(fields[0], data);
-        record.commit();
     },
 
     onCheckChange: function (column, rowIndex, checked, eOpts) {
@@ -70,11 +32,7 @@ Ext.define('Traccar.view.NotificationsController', {
         Ext.Ajax.request({
             scope: this,
             url: 'api/users/notifications',
-            jsonData: {
-                userId: this.userId,
-                type: record.get('type'),
-                attributes: record.get('attributes')
-            },
+            jsonData: record.data,
             callback: function (options, success, response) {
                 if (!success) {
                     Traccar.app.showError(response);

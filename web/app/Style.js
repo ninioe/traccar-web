@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,14 @@
 Ext.define('Traccar.Style', {
     singleton: true,
 
-    panelPadding: 10,
+    reconnectTimeout: 60 * 1000,
+
+    normalPadding: 10,
 
     windowWidth: 640,
     windowHeight: 480,
+
+    formFieldWidth: 277,
 
     dateTimeFormat24: 'Y-m-d H:i:s',
     dateTimeFormat12: 'Y-m-d g:i:s a',
@@ -33,7 +37,8 @@ Ext.define('Traccar.Style', {
     deviceWidth: 350,
 
     reportHeight: 250,
-    reportTime: 100,
+
+    columnWidthNormal: 100,
 
     mapDefaultLat: 12.966667,
     mapDefaultLon: 77.566667,
@@ -49,32 +54,36 @@ Ext.define('Traccar.Style', {
     ],
     mapRouteWidth: 5,
 
-    mapArrowStrokeColor: 'rgba(50, 50, 50, 1.0)',
-    mapArrowStrokeWidth: 2,
-
     mapTextColor: 'rgba(50, 50, 50, 1.0)',
     mapTextStrokeColor: 'rgba(255, 255, 255, 1.0)',
     mapTextStrokeWidth: 2,
-    mapTextOffset: 10,
+    mapTextOffset: 2,
     mapTextFont: 'bold 12px sans-serif',
 
     mapColorOnline: 'rgba(77, 250, 144, 1.0)',
     mapColorUnknown: 'rgba(250, 190, 77, 1.0)',
-    mapColorOffline: 'rgba(255, 84, 104, 1.0)',
+    mapColorOffline: 'rgba(255, 162, 173, 1.0)',
 
-    mapRadiusNormal: 9,
-    mapRadiusSelected: 14,
+    mapScaleNormal: 1,
+    mapScaleSelected: 1.5,
 
     mapMaxZoom: 19,
     mapDelay: 500,
 
+    mapAccuracyColor: 'rgba(96, 96, 96, 1.0)',
+
+    mapGeofenceTextColor: 'rgba(14, 88, 141, 1.0)',
     mapGeofenceColor: 'rgba(21, 127, 204, 1.0)',
-    mapGeofenceOverlay: 'rgba(21, 127, 204, 0.2)',
+    mapGeofenceOverlayOpacity: 0.2,
     mapGeofenceWidth: 5,
     mapGeofenceRadius: 9,
 
     coordinatePrecision: 6,
     numberPrecision: 2,
 
-    reportTagfieldWidth: 375
+    reportGridStyle: 'borderTop: 1px solid lightgray',
+
+    chartPadding: '20 40 10 10',
+    chartMarkerRadius: 3,
+    chartMarkerHighlightScaling: 1.5
 });

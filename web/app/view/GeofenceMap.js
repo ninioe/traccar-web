@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2016 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,10 +40,16 @@ Ext.define('Traccar.view.GeofenceMap', {
         }, {
             xtype: 'tbfill'
         }, {
-            text: Strings.sharedSave,
+            glyph: 'xf00c@FontAwesome',
+            tooltip: Strings.sharedSave,
+            tooltipType: 'title',
+            minWidth: 0,
             handler: 'onSaveClick'
         }, {
-            text: Strings.sharedCancel,
+            glyph: 'xf00d@FontAwesome',
+            tooltip: Strings.sharedCancel,
+            tooltipType: 'title',
+            minWidth: 0,
             handler: 'onCancelClick'
         }]
     },
@@ -53,7 +59,7 @@ Ext.define('Traccar.view.GeofenceMap', {
     },
 
     initMap: function () {
-        var map, featureOverlay, geometry;
+        var map, featureOverlay, geometry, fillColor;
         this.callParent();
 
         map = this.map;
@@ -68,13 +74,15 @@ Ext.define('Traccar.view.GeofenceMap', {
                 this.mapView.setCenter(geometry.getCoordinates()[0][0]);
             }
         }
+        fillColor = ol.color.asArray(Traccar.Style.mapGeofenceColor);
+        fillColor[3] = Traccar.Style.mapGeofenceOverlayOpacity;
         featureOverlay = new ol.layer.Vector({
             source: new ol.source.Vector({
                 features: this.features
             }),
             style: new ol.style.Style({
                 fill: new ol.style.Fill({
-                    color: Traccar.Style.mapGeofenceOverlay
+                    color: fillColor
                 }),
                 stroke: new ol.style.Stroke({
                     color: Traccar.Style.mapGeofenceColor,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2016 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,10 @@ Ext.define('Traccar.AttributeFormatter', {
         return (hours + ' ' + Strings.sharedHourAbbreviation + ' ' + minutes + ' ' + Strings.sharedMinuteAbbreviation);
     },
 
+    deviceIdFormatter: function (value) {
+        return Ext.getStore('Devices').getById(value).get('name');
+    },
+
     defaultFormatter: function (value) {
         if (typeof value === 'number') {
             return Number(value.toFixed(Traccar.Style.numberPrecision));
@@ -72,12 +76,14 @@ Ext.define('Traccar.AttributeFormatter', {
             return this.speedFormatter;
         } else if (key === 'course') {
             return this.courseFormatter;
-        } else if (key === 'distance' || key === 'odometer' || key === 'totalDistance') {
+        } else if (key === 'distance' || key === 'odometer' || key === 'totalDistance' || key === 'accuracy') {
             return this.distanceFormatter;
         } else if (key === 'hours') {
             return this.hoursFormatter;
         } else if (key === 'duration') {
             return this.durationFormatter;
+        } else if (key === 'deviceId') {
+            return this.deviceIdFormatter;
         } else {
             return this.defaultFormatter;
         }

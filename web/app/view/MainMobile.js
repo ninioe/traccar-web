@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,35 +19,50 @@ Ext.define('Traccar.view.MainMobile', {
     extend: 'Ext.container.Viewport',
     alias: 'widget.mainMobile',
 
+    id: 'rootPanel',
+
     requires: [
         'Traccar.view.Devices',
         'Traccar.view.State',
+        'Traccar.view.Report',
         'Traccar.view.Map'
     ],
 
-    layout: 'border',
-
-    defaults: {
-        header: false,
-        collapsible: true,
-        split: true
-    },
+    layout: 'card',
 
     items: [{
-        region: 'east',
-        xtype: 'stateView',
-        flex: 4,
-        collapsed: true,
-        titleCollapse: true,
-        floatable: false
+        layout: 'border',
+
+        defaults: {
+            header: false,
+            collapsible: true,
+            split: true
+        },
+
+        items: [{
+            region: 'east',
+            xtype: 'stateView',
+            title: Strings.stateTitle,
+            flex: 4,
+            collapsed: true,
+            collapseMode: 'mini',
+            titleCollapse: true,
+            floatable: false
+        }, {
+            region: 'center',
+            xtype: 'mapView',
+            collapsible: false,
+            flex: 2
+        }, {
+            region: 'south',
+            xtype: 'devicesView',
+            title: Strings.deviceTitle,
+            flex: 1,
+            collapsed: true,
+            titleCollapse: true,
+            floatable: false
+        }]
     }, {
-        region: 'center',
-        xtype: 'mapView',
-        collapsible: false,
-        flex: 2
-    }, {
-        region: 'south',
-        xtype: 'devicesView',
-        flex: 1
+        xtype: 'reportView'
     }]
 });
