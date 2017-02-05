@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2016 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,35 +16,59 @@
  */
 
 Ext.define('Traccar.view.Devices', {
-    extend: 'Ext.tree.Panel',
+    extend: 'Ext.grid.Panel',
     xtype: 'devicesView',
 
     requires: [
         'Traccar.view.DevicesController',
-        'Traccar.view.EditToolbar',
-        'Traccar.view.SettingsMenu'
+        'Traccar.view.EditToolbar'
     ],
 
     controller: 'devices',
     rootVisible: false,
 
-    store: {
-        type: 'tree',
-        parentIdProperty: 'groupId',
-        proxy: {
-            type: 'memory',
-            reader: {
-                type: 'json'
-            }
-        }
+    initComponent: function () {
+        this.store = Ext.create('Ext.data.ChainedStore', {
+            source: 'Devices',
+            groupField: 'groupId'
+        });
+        this.callParent();
     },
 
-    title: Strings.deviceTitle,
     selType: 'rowmodel',
 
     tbar: {
-        xtype: 'editToolbar',
+        componentCls: 'toolbar-header-style',
         items: [{
+            xtype: 'tbtext',
+            html: Strings.deviceTitle,
+            baseCls: 'x-panel-header-title-default'
+        }, {
+            xtype: 'tbfill'
+        }, {
+            xtype: 'button',
+            handler: 'onAddClick',
+            reference: 'toolbarAddButton',
+            glyph: 'xf067@FontAwesome',
+            tooltip: Strings.sharedAdd,
+            tooltipType: 'title'
+        }, {
+            xtype: 'button',
+            disabled: true,
+            handler: 'onEditClick',
+            reference: 'toolbarEditButton',
+            glyph: 'xf040@FontAwesome',
+            tooltip: Strings.sharedEdit,
+            tooltipType: 'title'
+        }, {
+            xtype: 'button',
+            disabled: true,
+            handler: 'onRemoveClick',
+            reference: 'toolbarRemoveButton',
+            glyph: 'xf00d@FontAwesome',
+            tooltip: Strings.sharedRemove,
+            tooltipType: 'title'
+        }, {
             xtype: 'button',
             disabled: true,
             handler: 'onGeofencesClick',
@@ -59,60 +83,40 @@ Ext.define('Traccar.view.Devices', {
             glyph: 'xf093@FontAwesome',
             tooltip: Strings.deviceCommand,
             tooltipType: 'title'
-        }, {
-            xtype: 'tbfill'
-        }, {
-            id: 'muteButton',
-            glyph: 'xf1f7@FontAwesome',
-            tooltip: Strings.sharedMute,
-            tooltipType: 'title',
-            pressed : true,
-            enableToggle: true,
-            listeners: {
-                toggle: function (button, pressed) {
-                    if (pressed) {
-                        button.setGlyph('xf1f7@FontAwesome');
-                    } else {
-                        button.setGlyph('xf0a2@FontAwesome');
-                    }
-                },
-                scope: this
-            }
-        }, {
-            id: 'deviceFollowButton',
-            glyph: 'xf05b@FontAwesome',
-            tooltip: Strings.deviceFollow,
-            tooltipType: 'title',
-            enableToggle: true,
-            toggleHandler: 'onFollowClick'
-        }, {
-            xtype: 'settingsMenu'
         }]
     },
 
     bbar: [{
         xtype: 'tbtext',
-        html: Strings.sharedSearch
+        html: Strings.groupParent
     }, {
-        xtype: 'textfield',
-        reference: 'deviceFilterField',
+        xtype: 'combobox',
+        store: 'Groups',
+        queryMode: 'local',
+        displayField: 'name',
+        valueField: 'id',
         flex: 1,
         listeners: {
             change: function () {
-                if (this.getValue().length > 0) {
-                    this.up('panel').store.filter({
-                        id: 'deviceFilter',
+                if (Ext.isNumber(this.getValue())) {
+                    this.up('grid').store.filter({
+                        id: 'groupFilter',
                         filterFn: function (item) {
-                            var re, deviceStore, filter = true, isDevice;
-                            isDevice = (item.get('id').substr(0, 1) === 'd');
-                            deviceStore = Ext.getStore('Devices');
-                            if (isDevice) {
-                                re = new RegExp(this.getValue(), 'i');
-                                if (re.test(item.get('name'))) {
-                                    filter = false;
+                            var groupId, group, groupStore, filter = true;
+                            groupId = item.get('groupId');
+                            groupStore = Ext.getStore('Groups');
+
+                            while (groupId) {
+                                group = groupStore.getById(groupId);
+                                if (group) {
+                                    if (group.get('id') === this.getValue()) {
+                                        filter = false;
+                                        break;
+                                    }
+                                    groupId = group.get('groupId');
+                                } else {
+                                    groupId = 0;
                                 }
-                            } else {
-                                filter = false;
                             }
 
                             return !filter;
@@ -120,48 +124,73 @@ Ext.define('Traccar.view.Devices', {
                         scope: this
                     });
                 } else {
-                    this.up('panel').store.removeFilter('deviceFilter');
+                    this.up('grid').store.removeFilter('groupFilter');
                 }
+            }
+        }
+    }, {
+        xtype: 'tbtext',
+        html: Strings.sharedSearch
+    }, {
+        xtype: 'textfield',
+        flex: 1,
+        listeners: {
+            change: function () {
+                this.up('grid').store.filter('name', this.getValue());
             }
         }
     }],
 
     listeners: {
-        selectionchange: 'onSelectionChange',
-        beforeselect: 'onBeforeSelect'
+        selectionchange: 'onSelectionChange'
     },
 
-    columns: [{
-        xtype: 'treecolumn',
-        text: Strings.sharedName,
-        dataIndex: 'name',
-        flex: 1
-    }, {
-        text: Strings.deviceLastUpdate,
-        dataIndex: 'lastUpdate',
-        flex: 1,
-        renderer: function (value, metaData, record) {
-            var isGroup = (record.get('id').substr(0, 1) === 'g');
-            if (isGroup) {
-                return;
-            }
-            switch (record.get('status')) {
-                case 'online':
-                    metaData.tdCls = 'view-color-green';
-                    break;
-                case 'offline':
-                    metaData.tdCls = 'view-color-red';
-                    break;
-                default:
-                    metaData.tdCls = 'view-color-yellow';
-                    break;
-            }
-            if (Traccar.app.getPreference('twelveHourFormat', false)) {
-                return Ext.Date.format(value, Traccar.Style.dateTimeFormat12);
-            } else {
-                return Ext.Date.format(value, Traccar.Style.dateTimeFormat24);
-            }
-        }
-    }]
+    forceFit: true,
 
+    columns: {
+        defaults: {
+            minWidth: Traccar.Style.columnWidthNormal
+        },
+        items: [{
+            text: Strings.sharedName,
+            dataIndex: 'name'
+        }, {
+            text: Strings.deviceIdentifier,
+            dataIndex: 'uniqueId',
+            hidden: true
+        }, {
+            text: Strings.devicePhone,
+            dataIndex: 'phone',
+            hidden: true
+        }, {
+            text: Strings.deviceModel,
+            dataIndex: 'model',
+            hidden: true
+        }, {
+            text: Strings.deviceContact,
+            dataIndex: 'contact',
+            hidden: true
+        }, {
+            text: Strings.deviceLastUpdate,
+            dataIndex: 'lastUpdate',
+            renderer: function (value, metaData, record) {
+                switch (record.get('status')) {
+                    case 'online':
+                        metaData.tdCls = 'view-color-green';
+                        break;
+                    case 'offline':
+                        metaData.tdCls = 'view-color-red';
+                        break;
+                    default:
+                        metaData.tdCls = 'view-color-yellow';
+                        break;
+                }
+                if (Traccar.app.getPreference('twelveHourFormat', false)) {
+                    return Ext.Date.format(value, Traccar.Style.dateTimeFormat12);
+                } else {
+                    return Ext.Date.format(value, Traccar.Style.dateTimeFormat24);
+                }
+            }
+        }]
+    }
 });

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2017 Anton Tananaev (anton@traccar.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  */
 
 Ext.define('Traccar.view.DevicesController', {
-    extend: 'Ext.app.ViewController',
+    extend: 'Traccar.view.EditToolbarController',
     alias: 'controller.devices',
 
     requires: [
@@ -35,146 +35,30 @@ Ext.define('Traccar.view.DevicesController', {
                     selectreport: 'selectReport'
                 },
                 'map': {
-                    selectdevice: 'selectDevice'
+                    selectdevice: 'selectDevice',
+                    deselectfeature: 'deselectFeature'
                 }
             },
             store: {
-                '#Groups': {
-                    datachanged: 'storeUpdate',
-                    update: 'storeUpdate'
-                },
                 '#Devices': {
-                    datachanged: 'storeUpdate',
                     update: 'onUpdateDevice'
                 }
             }
         }
     },
 
-    storeUpdate: function () {
-        var groupsStore, devicesStore, nodes = [], deviceFilterField = this.lookupReference('deviceFilterField');
-        groupsStore = Ext.getStore('Groups');
-        devicesStore = Ext.getStore('Devices');
-
-        groupsStore.each(function (record) {
-            var groupId, node = {
-                id: 'g' + record.get('id'),
-                original: record,
-                name: record.get('name'),
-                leaf: true
-            };
-            groupId = record.get('groupId');
-            if (groupId !== 0 && groupsStore.indexOfId(groupId) !== -1) {
-                node.groupId = 'g' + groupId;
-            }
-            nodes.push(node);
-        }, this);
-        devicesStore.each(function (record) {
-            var groupId, node = {
-                id: 'd' + record.get('id'),
-                original: record,
-                name: record.get('name'),
-                status: record.get('status'),
-                lastUpdate: record.get('lastUpdate'),
-                leaf: true
-            };
-            groupId = record.get('groupId');
-            if (groupId !== 0 && groupsStore.indexOfId(groupId) !== -1) {
-                node.groupId = 'g' + groupId;
-            }
-            nodes.push(node);
-        }, this);
-
-        this.getView().getStore().clearFilter(true);
-        this.getView().getStore().getProxy().setData(nodes);
-        this.getTreeState();
-        this.getView().getStore().load();
-        this.restoreTreeState();
-        if (deviceFilterField.getValue().length > 0) {
-            deviceFilterField.fireEvent('change');
-        }
-    },
-
-    getTreeState: function () {
-        var ids = [], expanded = [];
-
-        this.getView().getStore().getRoot().cascadeBy({
-            after: function (node) {
-                if (node.isExpanded()) {
-                    expanded.push(node);
-                }
-            }
-        });
-
-        Ext.each(expanded, function (node) {
-            if (node.getId() === 'root') {
-                return;
-            }
-            ids.push(node.getId());
-        });
-
-        this.state = ids;
-    },
-
-    restoreTreeState : function () {
-        var node, store = this.getView().getStore();
-        if (this.state) {
-            Ext.each(this.state, function (id) {
-                node = store.getNodeById(id);
-
-                if (node) {
-                    node.bubble(function (node) {
-                        node.expand();
-                    });
-                }
-            });
-        }
-    },
+    objectModel: 'Traccar.model.Device',
+    objectDialog: 'Traccar.view.DeviceDialog',
+    removeTitle: Strings.sharedDevice,
 
     init: function () {
-        var readonly = Traccar.app.getPreference('readonly', false) && !Traccar.app.getUser().get('admin');
-        this.lookupReference('toolbarAddButton').setVisible(!readonly);
-        this.lookupReference('toolbarEditButton').setVisible(!readonly);
-        this.lookupReference('toolbarRemoveButton').setVisible(!readonly);
+        var readonly, deviceReadonly;
+        deviceReadonly = Traccar.app.getUser().get('deviceReadonly');
+        readonly = Traccar.app.getPreference('readonly', false) && !Traccar.app.getUser().get('admin');
+        this.lookupReference('toolbarAddButton').setVisible(!readonly && !deviceReadonly);
+        this.lookupReference('toolbarEditButton').setVisible(!readonly && !deviceReadonly);
+        this.lookupReference('toolbarRemoveButton').setVisible(!readonly && !deviceReadonly);
         this.lookupReference('toolbarGeofencesButton').setVisible(!readonly);
-    },
-
-    onAddClick: function () {
-        var device, dialog;
-        device = Ext.create('Traccar.model.Device');
-        device.store = Ext.getStore('Devices');
-        dialog = Ext.create('Traccar.view.DeviceDialog');
-        dialog.down('form').loadRecord(device);
-        dialog.show();
-    },
-
-    onEditClick: function () {
-        var device, dialog, store = Ext.getStore('Devices');
-        device = this.getView().getSelectionModel().getSelection()[0];
-        dialog = Ext.create('Traccar.view.DeviceDialog');
-        dialog.down('form').loadRecord(store.getById(device.getId().substr(1)));
-        dialog.show();
-    },
-
-    onRemoveClick: function () {
-        var device = this.getView().getSelectionModel().getSelection()[0];
-        Ext.Msg.show({
-            title: Strings.deviceDialog,
-            message: Strings.sharedRemoveConfirm,
-            buttons: Ext.Msg.YESNO,
-            buttonText: {
-                yes: Strings.sharedRemove,
-                no: Strings.sharedCancel
-            },
-            fn: function (btn) {
-                var store;
-                if (btn === 'yes') {
-                    store = Ext.getStore('Devices');
-                    store.remove(store.getById(device.getId().substr(1)));
-                    store.sync();
-                }
-            }
-        });
     },
 
     onGeofencesClick: function () {
@@ -205,14 +89,6 @@ Ext.define('Traccar.view.DevicesController', {
         dialog.show();
     },
 
-    onFollowClick: function (button, pressed) {
-        var device, store = Ext.getStore('Devices');
-        if (pressed) {
-            device = this.getView().getSelectionModel().getSelection()[0];
-            this.fireEvent('selectdevice', store.getById(device.getId().substr(1)), true);
-        }
-    },
-
     updateButtons: function (selected) {
         var empty = selected.getCount() === 0;
         this.lookupReference('toolbarEditButton').setDisabled(empty);
@@ -222,31 +98,31 @@ Ext.define('Traccar.view.DevicesController', {
     },
 
     onSelectionChange: function (selected) {
-        var device, store = Ext.getStore('Devices');
         this.updateButtons(selected);
         if (selected.getCount() > 0) {
-            device = selected.getLastSelected();
-            this.fireEvent('selectDevice', store.getById(device.getId().substr(1)), true);
+            this.fireEvent('selectdevice', selected.getLastSelected(), true);
+        } else {
+            this.fireEvent('deselectfeature');
         }
     },
 
-    onBeforeSelect: function (row, record) {
-        return record.get('original') instanceof Traccar.model.Device;
-    },
-
     selectDevice: function (device, center) {
-        var store = this.getView().getStore();
-        this.getView().getSelectionModel().select([store.getById('d' + device.getId())], false, true);
-        this.getView().getView().focusRow(store.getById('d' + device.getId()));
+        this.getView().getSelectionModel().select([device], false, true);
+        this.updateButtons(this.getView().getSelectionModel());
+        this.getView().getView().focusRow(device);
     },
 
     selectReport: function (position) {
         if (position !== undefined) {
-            this.getView().getSelectionModel().deselectAll();
+            this.deselectFeature();
         }
     },
 
     onUpdateDevice: function (store, data) {
         this.updateButtons(this.getView().getSelectionModel());
+    },
+
+    deselectFeature: function () {
+        this.getView().getSelectionModel().deselectAll();
     }
 });
